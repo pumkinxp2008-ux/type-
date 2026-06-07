@@ -5,3 +5,11 @@ export interface User {
   pets: string[];
   colors: string[];
 }
+
+export interface IdResponse {
+  id: number;
+}
+
+export interface ErrorResponse {
+  error: string;
+}

@@ -1,20 +1,33 @@
 import { useState } from "react";
+import type { AxiosError, AxiosResponse } from "axios";
 import api from "./api";
+import type { User, IdResponse, ErrorResponse } from "./types";
+
+type ApiResponse = User | IdResponse;
 
 function App() {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [id, setId] = useState<number | null>(null);
-  const [response, setResponse] = useState<any>(null);
+
+  const [response, setResponse] = useState<ApiResponse | null>(null);
   const [error, setError] = useState("");
 
-  const handle = async (fn: () => Promise<any>) => {
+  const handle = async (
+    fn: () => Promise<AxiosResponse<ApiResponse>>
+  ) => {
     try {
       setError("");
+
       const res = await fn();
+
       setResponse(res.data);
-    } catch (e: any) {
-      setError(e.response?.data?.error || "Error");
+    } catch (e: unknown) {
+      const error = e as AxiosError<ErrorResponse>;
+
+      setError(
+        error.response?.data?.error ?? "Unknown error"
+      );
     }
   };
 
@@ -22,46 +35,90 @@ function App() {
     <div>
       <h1>Test App</h1>
 
-      <input placeholder="name" onChange={e => setName(e.target.value)} />
-      <input placeholder="surname" onChange={e => setSurname(e.target.value)} />
+      <input
+        placeholder="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
 
-      <button onClick={() =>
-        handle(() => api.post("/sign", { name }))
-      }>
+      <input
+        placeholder="surname"
+        value={surname}
+        onChange={(e) => setSurname(e.target.value)}
+      />
+
+      <button
+        onClick={() =>
+          handle(() =>
+            api.post<IdResponse>("/sign", { name })
+          )
+        }
+      >
         Sign
       </button>
 
-      <button onClick={() =>
-        handle(() => api.post("/check", { name }))
-      }>
+      <button
+        onClick={() =>
+          handle(() =>
+            api.post<IdResponse>("/check", { name })
+          )
+        }
+      >
         Check
       </button>
 
-      <button onClick={() =>
-        handle(() => api.post("/create", { name, surname }))
-      }>
+      <button
+        onClick={() =>
+          handle(() =>
+            api.post<User>("/create", {
+              name,
+              surname
+            })
+          )
+        }
+      >
         Create
       </button>
 
-      <button onClick={() =>
-        handle(() => api.post("/pet", { id, pet: "dog" }))
-      }>
+      <button
+        onClick={() =>
+          handle(() =>
+            api.post<User>("/pet", {
+              id,
+              pet: "dog"
+            })
+          )
+        }
+      >
         Add Pet
       </button>
 
-      <button onClick={() =>
-        handle(() => api.post("/colors", { id, colors: ["red", "blue"] }))
-      }>
+      <button
+        onClick={() =>
+          handle(() =>
+            api.post<User>("/colors", {
+              id,
+              colors: ["red", "blue"]
+            })
+          )
+        }
+      >
         Add Colors
       </button>
 
       <input
         placeholder="user id"
-        onChange={e => setId(Number(e.target.value))}
+        onChange={(e) =>
+          setId(Number(e.target.value))
+        }
       />
 
       <div style={{ color: "green" }}>
-        {JSON.stringify(response)}
+        {response && (
+          <pre>
+            {JSON.stringify(response, null, 2)}
+          </pre>
+        )}
       </div>
 
       <div style={{ color: "red" }}>
